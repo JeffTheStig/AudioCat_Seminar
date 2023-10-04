@@ -25,6 +25,6 @@ SUBDIRS := \
 Core/Src \
 Core/Startup \
 Drivers/STM32U5xx_HAL_Driver/Src \
-Middlewares/ST/FatFs/src \
-Middlewares/ST/FatFs/src/option \
+FileX/App \
+Middlewares/ST/filex/common/src \
 

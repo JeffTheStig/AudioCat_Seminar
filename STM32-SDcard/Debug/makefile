@@ -9,8 +9,8 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include Middlewares/ST/FatFs/src/option/subdir.mk
--include Middlewares/ST/FatFs/src/subdir.mk
+-include Middlewares/ST/filex/common/src/subdir.mk
+-include FileX/App/subdir.mk
 -include Drivers/STM32U5xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk

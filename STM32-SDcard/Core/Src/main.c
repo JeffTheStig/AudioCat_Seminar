@@ -21,10 +21,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "fatfs.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
+
+#include "fatfs.h"
 #include "wav_header.h"
 /* USER CODE END Includes */
 
@@ -94,7 +96,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
     uint16_t count=0;
-	  uint16_t readBuf[50000];
+	  uint32_t readBuf[50000];
 	  char filename[256];
 	  uint16_t raw;
     char msg[10];
@@ -212,30 +214,38 @@ int main(void)
     if (count<20) {
 	  sprintf(filename, "r_%05d.wav",  count++);
 	  fres = f_open(&fil, filename, FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+
 	  if (fres == FR_OK) {
 		  myprintf("I was able to open %s for writing\r\n",filename);
 	  } else {
 		  myprintf("f_open error (%i)\r\n", fres);
 	  }
+
 	  HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
 	  HAL_Delay(1000);
-    HAL_ADC_Start(&hadc1);
+
+	  HAL_ADC_Start(&hadc1);
 	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-    wav_header header = create_PCM_SC_header_correct(799992,5);
-    UINT bw;
+
+	  wav_header header = create_PCM_SC_header_correct(50000);
+	  UINT bw;
 	  fres = f_write(&fil, ((char*)&header), 8, &bw);
 	  
-    for (int i=0; i<5; i+=2) {
-	    readBuf[i]= HAL_ADC_GetValue(&hadc1);
+	  clock_t start = clock();
+	  for (int i=0; i<50000; i++) { // Used to be i+=2. Changed it to i+=1. Also increased size from 5 to 25000, changed buffer to 32 bit
+		endian_swap(&(readBuf[i]), HAL_ADC_GetValue(&hadc1));
 	  }
+	  clock_t end = clock();
 
-	  fres = f_write(&fil,&readBuf, 5, &bytesWrote);
+	  myprintf("Record time: %d ms\n", (double) (end - start));
+
+	  fres = f_write(&fil,&readBuf, 50000 * 4, &bytesWrote);
 	  count++;
 
 	  if(fres == FR_OK) {
-	 		myprintf("written to file");
+			myprintf("written to file");
 	  } else {
-	 		myprintf("f_write error (%i)\r\n");
+			myprintf("f_write error (%i)\r\n");
 	  }
 
 	  f_close(&fil);
@@ -634,7 +644,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);

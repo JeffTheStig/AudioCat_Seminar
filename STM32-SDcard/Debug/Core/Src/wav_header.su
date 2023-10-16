@@ -1,3 +1,5 @@
 ../Core/Src/wav_header.c:4:12:create_header	80	static
 ../Core/Src/wav_header.c:25:12:create_PCM_SC_header	48	static
 ../Core/Src/wav_header.c:29:12:create_PCM_SC_header_correct	48	static
+../Core/Src/wav_header.c:39:6:endian_swap_32	16	static
+../Core/Src/wav_header.c:46:6:endian_swap_16	16	static

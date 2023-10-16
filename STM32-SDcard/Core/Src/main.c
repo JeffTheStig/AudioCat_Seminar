@@ -18,13 +18,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "fatfs.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include "wav_header.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -75,6 +76,7 @@ void myprintf(const char *fmt, ...);
 void myprintf(const char *fmt, ...){
 	static char buffer[256];
 	va_list args;
+
 	va_start(args, fmt);
 	vsnprintf(buffer, sizeof(buffer), fmt, args);
 	va_end(args);
@@ -91,8 +93,12 @@ void myprintf(const char *fmt, ...){
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-    uint16_t raw;
-	  char msg[10];
+    uint16_t count=0;
+	  uint16_t readBuf[50000];
+	  char filename[256];
+	  uint16_t raw;
+    char msg[10];
+    uint8_t header_size=8;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -123,7 +129,6 @@ int main(void)
   MX_USB_OTG_HS_HCD_Init();
   MX_MEMORYMAP_Init();
   MX_SPI1_Init();
-//  MX_FileX_Init();
   /* USER CODE BEGIN 2 */
   MX_FATFS_Init();
   myprintf("\r\n~ SD card demo ~\r \n\r\n");
@@ -133,7 +138,7 @@ int main(void)
   FIL fil;
   FRESULT fres;
 
-  fres= f_mount(&FatFs, "", 1);
+  fres= f_mount(&FatFs, "/", 1);
   if(fres!= FR_OK)
   {
 	  myprintf("f_mount error (%i) \r\n", fres);
@@ -145,7 +150,7 @@ int main(void)
   FATFS* getFreeFs;
 
   fres= f_getfree("", &free_clusters, &getFreeFs);
-  if(fres != FR_OK){
+  if (fres != FR_OK) {
 	  myprintf("f_getfree error (%i)\r\n",fres);
 	  while(1);
   }
@@ -155,40 +160,40 @@ int main(void)
 
   myprintf("SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n", total_sectors / 2, free_sectors / 2);
 
-  fres = f_open(&fil, "/write.txt", FA_READ);
-    if (fres != FR_OK) {
-  	myprintf("f_open error (%i)\r\n");
-  	while(1);
-    }
-    myprintf("I was able to open 'test.txt' for reading!\r\n");
-    BYTE readBuf[30];
+  // fres = f_open(&fil, "/write.txt", FA_READ);
+    //   if (fres != FR_OK) {
+  	// 	myprintf("f_open error (%i)\r\n");
+  	// 	while(1);
+    //   }
+  //   myprintf("I was able to open 'test.txt' for reading!\r\n");
+    //   BYTE readBuf[30];
 
-    TCHAR* rres = f_gets((TCHAR*)readBuf, 30, &fil);
-      if(rres != 0) {
-    	myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
-      } else {
-    	myprintf("f_gets error (%i)\r\n", fres);
-      }
-      f_close(&fil);
+    //   TCHAR* rres = f_gets((TCHAR*)readBuf, 30, &fil);
+      //     if(rres != 0) {
+    	//   	myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
+      //     } else {
+    	//   	myprintf("f_gets error (%i)\r\n", fres);
+      //     }
+  //     f_close(&fil);
 
-	  fres = f_open(&fil, "write.txt", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
-	if(fres == FR_OK) {
-	myprintf("I was able to open 'write.txt' for writing\r\n");
-	} else {
-	myprintf("f_open error (%i)\r\n", fres);
-	}
-	strncpy((char*)readBuf, "a new file is made!", 19);
+	  //   fres = f_open(&fil, "write.txt", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+	// if(fres == FR_OK) {
+	// myprintf("I was able to open 'write.txt' for writing\r\n");
+	// } else {
+	// myprintf("f_open error (%i)\r\n", fres);
+	// }
+	// strncpy((char*)readBuf, "a new file is made!", 19);
 	  UINT bytesWrote;
-	  fres = f_write(&fil, readBuf, 19, &bytesWrote);
-	  if(fres == FR_OK) {
-		myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
-	  } else {
-		myprintf("f_write error (%i)\r\n");
-	  }
+	  //   fres = f_write(&fil, readBuf, 19, &bytesWrote);
+	  //   if(fres == FR_OK) {
+		// 	myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
+	  //   } else {
+		// 	myprintf("f_write error (%i)\r\n");
+	  //   }
 
-	  f_close(&fil);
+	  //   f_close(&fil);
 
-	  f_mount(NULL, "", 0);
+	  //   f_mount(NULL, "", 0);
 
   /* USER CODE END 2 */
 
@@ -197,17 +202,44 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-	  HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-	  raw= HAL_ADC_GetValue(&hadc1);
+
     /* USER CODE BEGIN 3 */
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 	  sprintf(msg, "%hu\r\n", raw);
 	  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 	  HAL_Delay(1);
+    
+    if (count<20) {
+	  sprintf(filename, "r_%05d.wav",  count++);
+	  fres = f_open(&fil, filename, FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+	  if (fres == FR_OK) {
+		  myprintf("I was able to open %s for writing\r\n",filename);
+	  } else {
+		  myprintf("f_open error (%i)\r\n", fres);
+	  }
 	  HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
 	  HAL_Delay(1000);
+    HAL_ADC_Start(&hadc1);
+	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+    wav_header header = create_PCM_SC_header_correct(799992,5);
+    UINT bw;
+	  fres = f_write(&fil, ((char*)&header), 8, &bw);
+	  
+    for (int i=0; i<5; i+=2) {
+	    readBuf[i]= HAL_ADC_GetValue(&hadc1);
+	  }
+
+	  fres = f_write(&fil,&readBuf, 5, &bytesWrote);
+	  count++;
+
+	  if(fres == FR_OK) {
+	 		myprintf("written to file");
+	  } else {
+	 		myprintf("f_write error (%i)\r\n");
+	  }
+
+	  f_close(&fil);
+	  }
   }
   /* USER CODE END 3 */
 }
@@ -602,7 +634,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
@@ -628,8 +660,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : SD_CS_Pin */
   GPIO_InitStruct.Pin = SD_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SD_CS_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LED_RED_Pin */

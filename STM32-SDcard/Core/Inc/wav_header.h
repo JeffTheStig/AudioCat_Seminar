@@ -32,6 +32,12 @@ void endian_swap_32(uint32_t* dst, uint32_t src);
 
 void endian_swap_16(uint16_t* dst, uint16_t src);
 
+uint32_t endian_swap_32_ret(uint32_t src);
+
+uint16_t endian_swap_16_ret(uint16_t src);
+
+unsigned char* to_byte_array(wav_header header);
+
 #define endian_swap(dst, src)                         \
 _Generic((src),                                              \
     uint32_t : endian_swap_32,          \

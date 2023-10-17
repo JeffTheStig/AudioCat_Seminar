@@ -71,6 +71,7 @@ static void MX_MEMORYMAP_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 void myprintf(const char *fmt, ...);
+void header_to_sd(wav_header* header, FIL* fil, UINT* bw);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -86,6 +87,27 @@ void myprintf(const char *fmt, ...){
 	int len= strlen(buffer);
 	HAL_UART_Transmit(&huart1, (uint8_t*)buffer, len, -1);
 }
+
+void header_to_sd(wav_header* header, FIL* fil, UINT* bw){
+	myprintf("start writing header");
+	f_write(fil, &header->riff_header, 4, bw);
+	f_write(fil, &header->wav_size, 4 , bw);
+	f_write(fil, &header->wave_header, 4, bw);
+	myprintf("finished RIFF header");
+	f_write(fil, &header->fmt_header, 4, bw);
+	f_write(fil, &header->fmt_chunk_size, 4 , bw);
+	f_write(fil, &header->audio_format, 2 , bw);
+	f_write(fil, &header->num_channels, 2 , bw);
+	f_write(fil, &header->sample_rate, 4 , bw);
+	f_write(fil, &header->byte_rate, 4 , bw);
+	f_write(fil, &header->sample_alignment, 2 , bw);
+	f_write(fil, &header->bit_depth, 2 , bw);
+	f_write(fil, header->data_header, 4, bw);
+	f_write(fil, &header->data_bytes, 4 , bw);
+	myprintf("Finished writing header");
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -97,6 +119,8 @@ int main(void)
   /* USER CODE BEGIN 1 */
     uint16_t count=0;
 	  uint32_t readBuf[50000];
+	  uint8_t readBuf_8b[50000];
+	  uint16_t readBuf_16b[50000];
 	  char filename[256];
 	  uint16_t raw;
     char msg[10];
@@ -207,11 +231,11 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-	  sprintf(msg, "%hu\r\n", raw);
-	  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+//	  sprintf(msg, "%hu\r\n", raw);
+//	  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 	  HAL_Delay(1);
     
-    if (count<20) {
+    if (count<5) {
 	  sprintf(filename, "r_%05d.wav",  count++);
 	  fres = f_open(&fil, filename, FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
 
@@ -224,26 +248,57 @@ int main(void)
 	  HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
 	  HAL_Delay(1000);
 
-	  HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//	  HAL_ADC_Start(&hadc1);
+//	  HAL_ADC_PollForConversion(&hadc1, 1);
 
 	  wav_header header = create_PCM_SC_header_correct(50000);
 	  UINT bw;
-	  fres = f_write(&fil, ((char*)&header), 8, &bw);
+//	  fres = f_write(&fil, (to_byte_array(header)), 44, &bw);
+//	  myprintf("wav_size: %d\r\n", header.wav_size);
+//	  myprintf("data_size: %d\r\n", header.data_bytes);
+//	  myprintf("data: %x\r\n", header.data_bytes);
+//	  myprintf("swapped manual: \r\n%x\r\n", ((header.data_bytes<<24) & 0xff000000) |
+//			  ((header.data_bytes<<8) & 0x00ff0000) |
+//			  ((header.data_bytes>>8) & 0x0000ff00) |
+//			((header.data_bytes>>24) & 0x000000ff) );
+//	  uint32_t swapped = endian_swap_32_ret(header.data_bytes);
+	  myprintf("fmt_chunk_size: %d\r\n", header.fmt_chunk_size);
+	  myprintf("fmt_chunk_size: %x\r\n", header.fmt_chunk_size);
+
+
+//	  endian_swap(&swapped, header.data_bytes);
+//	  myprintf("data_size swapped: %d\r\n", swapped);
+//	  myprintf("data_size swapped hex: %x\r\n", swapped);
+	  header_to_sd(&header, &fil, &bw);
 	  
-	  clock_t start = clock();
+//	  char h[37];
+//	  sprintf(h, ((char*) &header), sizeof(header));
+//	  h[37] = 0x00;
+//	  myprintf("Header, size: %d, cont: %s\r\n", h);
+
+	  uint32_t start = HAL_GetTick();
+	  myprintf("Clock at start: %d \r\n", start);
 	  for (int i=0; i<50000; i++) { // Used to be i+=2. Changed it to i+=1. Also increased size from 5 to 25000, changed buffer to 32 bit
-		endian_swap(&(readBuf[i]), HAL_ADC_GetValue(&hadc1));
+//		endian_swap(&(readBuf[i]), HAL_ADC_GetValue(&hadc1));
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+		readBuf_16b[i] = (HAL_ADC_GetValue(&hadc1) & 0x0000ffff);
+//		for (int i = 1; i < 22; i++) {
+//			HAL_ADC_GetValue(&hadc1);
+//		}
 	  }
-	  clock_t end = clock();
+	  uint32_t end = HAL_GetTick();
 
-	  myprintf("Record time: %d ms\n", (double) (end - start));
+	  myprintf("Clock at end: %d\r\n", end);
+	  myprintf("Record time: %d ms\r\n", (end - start));
 
-	  fres = f_write(&fil,&readBuf, 50000 * 4, &bytesWrote);
+	  myprintf("First value: %x", readBuf_16b[0]);
+
+	  fres = f_write(&fil,&readBuf_16b, 50000 * 2, &bytesWrote);
 	  count++;
 
 	  if(fres == FR_OK) {
-			myprintf("written to file");
+			myprintf("written to file\r\n");
 	  } else {
 			myprintf("f_write error (%i)\r\n");
 	  }
@@ -377,7 +432,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_5CYCLE;
+  sConfig.SamplingTime = ADC_SAMPLETIME_391CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;

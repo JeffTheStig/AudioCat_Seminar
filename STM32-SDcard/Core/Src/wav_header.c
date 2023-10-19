@@ -1,5 +1,8 @@
+#define _USE_MATH_DEFINES
+
 #include "wav_header.h"
 #include <string.h>
+#include <math.h>
 
 wav_header create_header(uint32_t wav_size, uint32_t sample_rate, uint32_t bytes_per_sample, uint16_t bit_depth, uint32_t fmt_chunk_size, uint16_t audio_fmt, uint16_t num_channels, uint32_t data_bytes) {
     wav_header head;
@@ -124,4 +127,34 @@ unsigned char* to_byte_array(wav_header header) {
 	memcpy( out[40], &header.data_bytes, 4 );
 
 	return out;
+}
+
+bw_filter create_filter(double cutoff, double sample) {
+	bw_filter f;
+	double ita = 1.0 / tan(M_PI * (cutoff / sample));
+	double q = sqrt(2.0);
+	f.b0 = 1.0 / (1.0 + q * ita + ita * ita);
+	f.b1 = 2 * f.b0;
+	f.b2 = f.b0;
+	f.a1 = 2.0 * (ita * ita - 1.0) * f.b0;
+	f.a2 = - (1.0 - q * ita + ita * ita) * f.b0;
+	f.a0 = f.a2;
+
+//	f.x = { 0, 0, 0 };
+//	f.y = { 0, 0, 0 };
+
+	return f;
+}
+
+uint16_t filter(bw_filter f, uint16_t input) {
+	f.x[0] = input;
+	uint16_t r = (uint16_t) ((f.a0 * f.x[0]) + (f.a1 * f.x[1]) + (f.a2 * f.x[2]) - (f.b1 * f.y[1]) - (f.b2 * f.y[2])) / f.b0;
+	f.y[0] = r;
+	f.x[2] = f.x[1];
+	f.x[1] = f.x[0];
+	f.y[2] = f.y[1];
+	f.y[1] = f.y[0];
+
+	return f.y[0];
+
 }

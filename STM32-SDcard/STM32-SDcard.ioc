@@ -2,7 +2,8 @@
 ADC1.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_3
 ADC1.ContinuousConvMode=DISABLE
 ADC1.EnableAnalogWatchDog1=false
-ADC1.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,OffsetNumber-0\#ChannelRegularConversion,NbrOfConversionFlag,master,EnableAnalogWatchDog1,Resolution,ContinuousConvMode
+ADC1.GainCompensation=0
+ADC1.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,OffsetNumber-0\#ChannelRegularConversion,NbrOfConversionFlag,master,EnableAnalogWatchDog1,Resolution,ContinuousConvMode,GainCompensation
 ADC1.NbrOfConversionFlag=1
 ADC1.OffsetNumber-0\#ChannelRegularConversion=ADC_OFFSET_NONE
 ADC1.Rank-0\#ChannelRegularConversion=1

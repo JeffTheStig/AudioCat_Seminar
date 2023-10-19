@@ -76,6 +76,9 @@ void header_to_sd(wav_header* header, FIL* fil, UINT* bw);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+#define FILTER true
+
 void myprintf(const char *fmt, ...){
 	static char buffer[256];
 	va_list args;
@@ -186,6 +189,8 @@ int main(void)
 
   myprintf("SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n", total_sectors / 2, free_sectors / 2);
 
+  bw_filter filt = create_filter(1000, 27027);
+
   // fres = f_open(&fil, "/write.txt", FA_READ);
     //   if (fres != FR_OK) {
   	// 	myprintf("f_open error (%i)\r\n");
@@ -282,7 +287,11 @@ int main(void)
 //		endian_swap(&(readBuf[i]), HAL_ADC_GetValue(&hadc1));
 		HAL_ADC_Start(&hadc1);
 		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+#if FILTER
+		readBuf_16b[i] = filter(filt, (HAL_ADC_GetValue(&hadc1) & 0x0000ffff));
+#else
 		readBuf_16b[i] = (HAL_ADC_GetValue(&hadc1) & 0x0000ffff);
+#endif
 //		for (int i = 1; i < 22; i++) {
 //			HAL_ADC_GetValue(&hadc1);
 //		}

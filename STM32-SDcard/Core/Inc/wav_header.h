@@ -22,6 +22,18 @@ typedef struct wav_header {
     // uint8_t bytes[]; // Remainder of wave file is bytes
 } wav_header;
 
+typedef struct bw_filter {
+	double b0;
+	double b1;
+	double b2;
+	double a0;
+	double a1;
+	double a2;
+
+	uint16_t y[3];
+	uint16_t x[3];
+} bw_filter;
+
 wav_header create_header(uint32_t wav_size, uint32_t sample_rate, uint32_t bytes_per_sample, uint16_t bit_depth, uint32_t fmt_chunk_size, uint16_t audio_fmt, uint16_t num_channels, uint32_t data_bytes);
 
 wav_header create_PCM_SC_header(uint32_t wav_size, uint32_t sample_rate, uint32_t bytes_per_sample, uint16_t bit_depth, uint32_t data_bytes);
@@ -37,6 +49,10 @@ uint32_t endian_swap_32_ret(uint32_t src);
 uint16_t endian_swap_16_ret(uint16_t src);
 
 unsigned char* to_byte_array(wav_header header);
+
+bw_filter create_filter(double cutoff, double sample);
+
+uint16_t filter(bw_filter f, uint16_t input);
 
 #define endian_swap(dst, src)                         \
 _Generic((src),                                              \

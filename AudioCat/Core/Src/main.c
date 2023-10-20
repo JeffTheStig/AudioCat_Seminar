@@ -21,8 +21,13 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include<string.h>
-#include<stdio.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include <time.h>
+
+#include "fatfs.h"
+#include "wav_header.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,9 +48,9 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
-UART_HandleTypeDef huart1;
+SD_HandleTypeDef hsd1;
 
-HCD_HandleTypeDef hhcd_USB_OTG_HS;
+UART_HandleTypeDef huart4;
 
 /* USER CODE BEGIN PV */
 
@@ -53,20 +58,52 @@ HCD_HandleTypeDef hhcd_USB_OTG_HS;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void SystemPower_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_ADC1_Init(void);
-static void MX_ICACHE_Init(void);
-static void MX_UCPD1_Init(void);
-static void MX_USART1_UART_Init(void);
-static void MX_USB_OTG_HS_HCD_Init(void);
 static void MX_MEMORYMAP_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_SDMMC1_SD_Init(void);
+static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
-
+void myprintf(const char *fmt, ...);
+void header_to_sd(wav_header* header, FIL* fil, UINT* bw);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+#define FILTER true
+
+void myprintf(const char *fmt, ...){
+	static char buffer[256];
+	va_list args;
+
+	va_start(args, fmt);
+	vsnprintf(buffer, sizeof(buffer), fmt, args);
+	va_end(args);
+
+	int len= strlen(buffer);
+	HAL_UART_Transmit(&huart1, (uint8_t*)buffer, len, -1);
+}
+
+void header_to_sd(wav_header* header, FIL* fil, UINT* bw){
+	myprintf("start writing header");
+	f_write(fil, &header->riff_header, 4, bw);
+	f_write(fil, &header->wav_size, 4 , bw);
+	f_write(fil, &header->wave_header, 4, bw);
+	myprintf("finished RIFF header");
+	f_write(fil, &header->fmt_header, 4, bw);
+	f_write(fil, &header->fmt_chunk_size, 4 , bw);
+	f_write(fil, &header->audio_format, 2 , bw);
+	f_write(fil, &header->num_channels, 2 , bw);
+	f_write(fil, &header->sample_rate, 4 , bw);
+	f_write(fil, &header->byte_rate, 4 , bw);
+	f_write(fil, &header->sample_alignment, 2 , bw);
+	f_write(fil, &header->bit_depth, 2 , bw);
+	f_write(fil, header->data_header, 4, bw);
+	f_write(fil, &header->data_bytes, 4 , bw);
+	myprintf("Finished writing header");
+}
+
 
 /* USER CODE END 0 */
 
@@ -77,8 +114,14 @@ static void MX_MEMORYMAP_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+    uint16_t count=0;
+	  uint32_t readBuf[50000];
+	  uint8_t readBuf_8b[50000];
+	  uint16_t readBuf_16b[50000];
+	  char filename[256];
 	  uint16_t raw;
-	  char msg[10];
+    char msg[10];
+    uint8_t header_size=8;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -93,22 +136,83 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
-  /* Configure the System Power */
-  SystemPower_Config();
-
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ADC1_Init();
-  MX_ICACHE_Init();
-  MX_UCPD1_Init();
-  MX_USART1_UART_Init();
-  MX_USB_OTG_HS_HCD_Init();
   MX_MEMORYMAP_Init();
+  MX_ADC1_Init();
+  MX_SDMMC1_SD_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
+  MX_FATFS_Init();
+  myprintf("\r\n~ SD card demo ~\r \n\r\n");
+  HAL_Delay(1000);
+
+  FATFS FatFs;
+  FIL fil;
+  FRESULT fres;
+
+  fres= f_mount(&FatFs, "/", 1);
+  if(fres!= FR_OK)
+  {
+	  myprintf("f_mount error (%i) \r\n", fres);
+	  while(1);
+  }
+
+  DWORD free_clusters, free_sectors, total_sectors;
+
+  FATFS* getFreeFs;
+
+  fres= f_getfree("", &free_clusters, &getFreeFs);
+  if (fres != FR_OK) {
+	  myprintf("f_getfree error (%i)\r\n",fres);
+	  while(1);
+  }
+
+  total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
+  free_sectors = free_clusters * getFreeFs->csize;
+
+  myprintf("SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n", total_sectors / 2, free_sectors / 2);
+
+  bw_filter filt = create_filter(1000, 27027);
+
+  // fres = f_open(&fil, "/write.txt", FA_READ);
+    //   if (fres != FR_OK) {
+  	// 	myprintf("f_open error (%i)\r\n");
+  	// 	while(1);
+    //   }
+  //   myprintf("I was able to open 'test.txt' for reading!\r\n");
+    //   BYTE readBuf[30];
+
+    //   TCHAR* rres = f_gets((TCHAR*)readBuf, 30, &fil);
+      //     if(rres != 0) {
+    	//   	myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
+      //     } else {
+    	//   	myprintf("f_gets error (%i)\r\n", fres);
+      //     }
+  //     f_close(&fil);
+
+	  //   fres = f_open(&fil, "write.txt", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+	// if(fres == FR_OK) {
+	// myprintf("I was able to open 'write.txt' for writing\r\n");
+	// } else {
+	// myprintf("f_open error (%i)\r\n", fres);
+	// }
+	// strncpy((char*)readBuf, "a new file is made!", 19);
+	  UINT bytesWrote;
+	  //   fres = f_write(&fil, readBuf, 19, &bytesWrote);
+	  //   if(fres == FR_OK) {
+		// 	myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
+	  //   } else {
+		// 	myprintf("f_write error (%i)\r\n");
+	  //   }
+
+	  //   f_close(&fil);
+
+	  //   f_mount(NULL, "", 0);
 
   /* USER CODE END 2 */
 
@@ -117,15 +221,87 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-	  HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-	  raw= HAL_ADC_GetValue(&hadc1);
+
     /* USER CODE BEGIN 3 */
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-	  sprintf(msg, "%hu\r\n", raw);
-	  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+//	  sprintf(msg, "%hu\r\n", raw);
+//	  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 	  HAL_Delay(1);
+    
+    if (count<5) {
+	  sprintf(filename, "r_%05d.wav",  count++);
+	  fres = f_open(&fil, filename, FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+
+	  if (fres == FR_OK) {
+		  myprintf("I was able to open %s for writing\r\n",filename);
+	  } else {
+		  myprintf("f_open error (%i)\r\n", fres);
+	  }
+
+	  HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+	  HAL_Delay(1000);
+
+//	  HAL_ADC_Start(&hadc1);
+//	  HAL_ADC_PollForConversion(&hadc1, 1);
+
+	  wav_header header = create_PCM_SC_header_correct(50000);
+	  UINT bw;
+//	  fres = f_write(&fil, (to_byte_array(header)), 44, &bw);
+//	  myprintf("wav_size: %d\r\n", header.wav_size);
+//	  myprintf("data_size: %d\r\n", header.data_bytes);
+//	  myprintf("data: %x\r\n", header.data_bytes);
+//	  myprintf("swapped manual: \r\n%x\r\n", ((header.data_bytes<<24) & 0xff000000) |
+//			  ((header.data_bytes<<8) & 0x00ff0000) |
+//			  ((header.data_bytes>>8) & 0x0000ff00) |
+//			((header.data_bytes>>24) & 0x000000ff) );
+//	  uint32_t swapped = endian_swap_32_ret(header.data_bytes);
+	  myprintf("fmt_chunk_size: %d\r\n", header.fmt_chunk_size);
+	  myprintf("fmt_chunk_size: %x\r\n", header.fmt_chunk_size);
+
+
+//	  endian_swap(&swapped, header.data_bytes);
+//	  myprintf("data_size swapped: %d\r\n", swapped);
+//	  myprintf("data_size swapped hex: %x\r\n", swapped);
+	  header_to_sd(&header, &fil, &bw);
+	  
+//	  char h[37];
+//	  sprintf(h, ((char*) &header), sizeof(header));
+//	  h[37] = 0x00;
+//	  myprintf("Header, size: %d, cont: %s\r\n", h);
+
+	  uint32_t start = HAL_GetTick();
+	  myprintf("Clock at start: %d \r\n", start);
+	  for (int i=0; i<50000; i++) { // Used to be i+=2. Changed it to i+=1. Also increased size from 5 to 25000, changed buffer to 32 bit
+//		endian_swap(&(readBuf[i]), HAL_ADC_GetValue(&hadc1));
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+#if FILTER
+		readBuf_16b[i] = filter(filt, (HAL_ADC_GetValue(&hadc1) & 0x0000ffff));
+#else
+		readBuf_16b[i] = (HAL_ADC_GetValue(&hadc1) & 0x0000ffff);
+#endif
+//		for (int i = 1; i < 22; i++) {
+//			HAL_ADC_GetValue(&hadc1);
+//		}
+	  }
+	  uint32_t end = HAL_GetTick();
+
+	  myprintf("Clock at end: %d\r\n", end);
+	  myprintf("Record time: %d ms\r\n", (end - start));
+
+	  myprintf("First value: %x", readBuf_16b[0]);
+
+	  fres = f_write(&fil,&readBuf_16b, 50000 * 2, &bytesWrote);
+	  count++;
+
+	  if(fres == FR_OK) {
+			myprintf("written to file\r\n");
+	  } else {
+			myprintf("f_write error (%i)\r\n");
+	  }
+
+	  f_close(&fil);
+	  }
   }
   /* USER CODE END 3 */
 }
@@ -158,12 +334,12 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
   RCC_OscInitStruct.PLL.PLLMBOOST = RCC_PLLMBOOST_DIV4;
   RCC_OscInitStruct.PLL.PLLM = 3;
-  RCC_OscInitStruct.PLL.PLLN = 8;
-  RCC_OscInitStruct.PLL.PLLP = 8;
+  RCC_OscInitStruct.PLL.PLLN = 5;
+  RCC_OscInitStruct.PLL.PLLP = 1;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLLVCIRANGE_1;
-  RCC_OscInitStruct.PLL.PLLFRACN = 0;
+  RCC_OscInitStruct.PLL.PLLFRACN = 24576;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -184,25 +360,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief Power Configuration
-  * @retval None
-  */
-static void SystemPower_Config(void)
-{
-  HAL_PWREx_EnableVddIO2();
-
-  /*
-   * Switch to SMPS regulator instead of LDO
-   */
-  if (HAL_PWREx_ConfigSupply(PWR_SMPS_SUPPLY) != HAL_OK)
-  {
-    Error_Handler();
-  }
-/* USER CODE BEGIN PWR */
-/* USER CODE END PWR */
 }
 
 /**
@@ -251,7 +408,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Channel = ADC_CHANNEL_10;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_5CYCLE;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
@@ -264,38 +421,6 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
-
-}
-
-/**
-  * @brief ICACHE Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ICACHE_Init(void)
-{
-
-  /* USER CODE BEGIN ICACHE_Init 0 */
-
-  /* USER CODE END ICACHE_Init 0 */
-
-  /* USER CODE BEGIN ICACHE_Init 1 */
-
-  /* USER CODE END ICACHE_Init 1 */
-
-  /** Enable instruction cache in 1-way (direct mapped cache)
-  */
-  if (HAL_ICACHE_ConfigAssociativityMode(ICACHE_1WAY) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_ICACHE_Enable() != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ICACHE_Init 2 */
-
-  /* USER CODE END ICACHE_Init 2 */
 
 }
 
@@ -321,125 +446,81 @@ static void MX_MEMORYMAP_Init(void)
 }
 
 /**
-  * @brief UCPD1 Initialization Function
+  * @brief SDMMC1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_UCPD1_Init(void)
+static void MX_SDMMC1_SD_Init(void)
 {
 
-  /* USER CODE BEGIN UCPD1_Init 0 */
+  /* USER CODE BEGIN SDMMC1_Init 0 */
 
-  /* USER CODE END UCPD1_Init 0 */
+  /* USER CODE END SDMMC1_Init 0 */
 
-  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+  /* USER CODE BEGIN SDMMC1_Init 1 */
 
-  /* Peripheral clock enable */
-  LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_UCPD1);
+  /* USER CODE END SDMMC1_Init 1 */
+  hsd1.Instance = SDMMC1;
+  hsd1.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
+  hsd1.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
+  hsd1.Init.BusWide = SDMMC_BUS_WIDE_4B;
+  hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
+  hsd1.Init.ClockDiv = 0;
+  if (HAL_SD_Init(&hsd1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SDMMC1_Init 2 */
 
-  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
-  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
-  /**UCPD1 GPIO Configuration
-  PB15   ------> UCPD1_CC2
-  PA15 (JTDI)   ------> UCPD1_CC1
-  */
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_15;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_15;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-  LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN UCPD1_Init 1 */
-
-  /* USER CODE END UCPD1_Init 1 */
-  /* USER CODE BEGIN UCPD1_Init 2 */
-
-  /* USER CODE END UCPD1_Init 2 */
+  /* USER CODE END SDMMC1_Init 2 */
 
 }
 
 /**
-  * @brief USART1 Initialization Function
+  * @brief UART4 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART1_UART_Init(void)
+static void MX_UART4_Init(void)
 {
 
-  /* USER CODE BEGIN USART1_Init 0 */
+  /* USER CODE BEGIN UART4_Init 0 */
 
-  /* USER CODE END USART1_Init 0 */
+  /* USER CODE END UART4_Init 0 */
 
-  /* USER CODE BEGIN USART1_Init 1 */
+  /* USER CODE BEGIN UART4_Init 1 */
 
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 115200;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart4.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart4.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart4.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart4, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart4, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  if (HAL_UARTEx_DisableFifoMode(&huart4) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART1_Init 2 */
+  /* USER CODE BEGIN UART4_Init 2 */
 
-  /* USER CODE END USART1_Init 2 */
-
-}
-
-/**
-  * @brief USB_OTG_HS Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USB_OTG_HS_HCD_Init(void)
-{
-
-  /* USER CODE BEGIN USB_OTG_HS_Init 0 */
-
-  /* USER CODE END USB_OTG_HS_Init 0 */
-
-  /* USER CODE BEGIN USB_OTG_HS_Init 1 */
-
-  /* USER CODE END USB_OTG_HS_Init 1 */
-  hhcd_USB_OTG_HS.Instance = USB_OTG_HS;
-  hhcd_USB_OTG_HS.Init.Host_channels = 16;
-  hhcd_USB_OTG_HS.Init.speed = HCD_SPEED_HIGH;
-  hhcd_USB_OTG_HS.Init.dma_enable = DISABLE;
-  hhcd_USB_OTG_HS.Init.phy_itface = USB_OTG_HS_EMBEDDED_PHY;
-  hhcd_USB_OTG_HS.Init.Sof_enable = DISABLE;
-  hhcd_USB_OTG_HS.Init.low_power_enable = DISABLE;
-  hhcd_USB_OTG_HS.Init.use_external_vbus = ENABLE;
-  if (HAL_HCD_Init(&hhcd_USB_OTG_HS) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USB_OTG_HS_Init 2 */
-
-  /* USER CODE END USB_OTG_HS_Init 2 */
+  /* USER CODE END UART4_Init 2 */
 
 }
 
@@ -450,58 +531,13 @@ static void MX_USB_OTG_HS_HCD_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, UCPD_DBn_Pin|LED_BLUE_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : USER_BUTTON_Pin */
-  GPIO_InitStruct.Pin = USER_BUTTON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : UCPD_FLT_Pin */
-  GPIO_InitStruct.Pin = UCPD_FLT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(UCPD_FLT_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LED_RED_Pin */
-  GPIO_InitStruct.Pin = LED_RED_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED_RED_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LED_GREEN_Pin */
-  GPIO_InitStruct.Pin = LED_GREEN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED_GREEN_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : UCPD_DBn_Pin LED_BLUE_Pin */
-  GPIO_InitStruct.Pin = UCPD_DBn_Pin|LED_BLUE_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

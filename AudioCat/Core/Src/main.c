@@ -147,72 +147,73 @@ int main(void)
   MX_SDMMC1_SD_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
-  MX_FATFS_Init();
+  //MX_FATFS_Init();
   myprintf("\r\n~ SD card demo ~\r \n\r\n");
   HAL_Delay(1000);
+  HAL_GPIO_WritePin(GPIOG, MCU_LED2_Pin|MCU_LED1_Pin, GPIO_PIN_SET);
 
-  FATFS FatFs;
-  FIL fil;
-  FRESULT fres;
-
-  fres= f_mount(&FatFs, "/", 1);
-  if(fres!= FR_OK)
-  {
-	  myprintf("f_mount error (%i) \r\n", fres);
-	  while(1);
-  }
-
-  DWORD free_clusters, free_sectors, total_sectors;
-
-  FATFS* getFreeFs;
-
-  fres= f_getfree("", &free_clusters, &getFreeFs);
-  if (fres != FR_OK) {
-	  myprintf("f_getfree error (%i)\r\n",fres);
-	  while(1);
-  }
-
-  total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
-  free_sectors = free_clusters * getFreeFs->csize;
-
-  myprintf("SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n", total_sectors / 2, free_sectors / 2);
-
-  bw_filter filt = create_filter(1000, 27027);
-
-  // fres = f_open(&fil, "/write.txt", FA_READ);
-    //   if (fres != FR_OK) {
-  	// 	myprintf("f_open error (%i)\r\n");
-  	// 	while(1);
-    //   }
-  //   myprintf("I was able to open 'test.txt' for reading!\r\n");
-    //   BYTE readBuf[30];
-
-    //   TCHAR* rres = f_gets((TCHAR*)readBuf, 30, &fil);
-      //     if(rres != 0) {
-    	//   	myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
-      //     } else {
-    	//   	myprintf("f_gets error (%i)\r\n", fres);
-      //     }
-  //     f_close(&fil);
-
-	  //   fres = f_open(&fil, "write.txt", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
-	// if(fres == FR_OK) {
-	// myprintf("I was able to open 'write.txt' for writing\r\n");
-	// } else {
-	// myprintf("f_open error (%i)\r\n", fres);
-	// }
-	// strncpy((char*)readBuf, "a new file is made!", 19);
-	  UINT bytesWrote;
-	  //   fres = f_write(&fil, readBuf, 19, &bytesWrote);
-	  //   if(fres == FR_OK) {
-		// 	myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
-	  //   } else {
-		// 	myprintf("f_write error (%i)\r\n");
-	  //   }
-
-	  //   f_close(&fil);
-
-	  //   f_mount(NULL, "", 0);
+//  FATFS FatFs;
+//  FIL fil;
+//  FRESULT fres;
+//
+//  //fres= f_mount(&FatFs, "/", 1);
+//  if(fres!= FR_OK)
+//  {
+//	  myprintf("f_mount error (%i) \r\n", fres);
+//	  while(1);
+//  }
+//
+//  DWORD free_clusters, free_sectors, total_sectors;
+//
+//  FATFS* getFreeFs;
+//
+//  fres= f_getfree("", &free_clusters, &getFreeFs);
+//  if (fres != FR_OK) {
+//	  myprintf("f_getfree error (%i)\r\n",fres);
+//	  while(1);
+//  }
+//
+//  total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
+//  free_sectors = free_clusters * getFreeFs->csize;
+//
+//  myprintf("SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n", total_sectors / 2, free_sectors / 2);
+//
+//  bw_filter filt = create_filter(1000, 27027);
+//
+//  // fres = f_open(&fil, "/write.txt", FA_READ);
+//    //   if (fres != FR_OK) {
+//  	// 	myprintf("f_open error (%i)\r\n");
+//  	// 	while(1);
+//    //   }
+//  //   myprintf("I was able to open 'test.txt' for reading!\r\n");
+//    //   BYTE readBuf[30];
+//
+//    //   TCHAR* rres = f_gets((TCHAR*)readBuf, 30, &fil);
+//      //     if(rres != 0) {
+//    	//   	myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
+//      //     } else {
+//    	//   	myprintf("f_gets error (%i)\r\n", fres);
+//      //     }
+//  //     f_close(&fil);
+//
+//	  //   fres = f_open(&fil, "write.txt", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+//	// if(fres == FR_OK) {
+//	// myprintf("I was able to open 'write.txt' for writing\r\n");
+//	// } else {
+//	// myprintf("f_open error (%i)\r\n", fres);
+//	// }
+//	// strncpy((char*)readBuf, "a new file is made!", 19);
+//	  UINT bytesWrote;
+//	  //   fres = f_write(&fil, readBuf, 19, &bytesWrote);
+//	  //   if(fres == FR_OK) {
+//		// 	myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
+//	  //   } else {
+//		// 	myprintf("f_write error (%i)\r\n");
+//	  //   }
+//
+//	  //   f_close(&fil);
+//
+//	  //   f_mount(NULL, "", 0);
 
   /* USER CODE END 2 */
 
@@ -223,85 +224,86 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+//	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 //	  sprintf(msg, "%hu\r\n", raw);
 //	  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 	  HAL_Delay(1);
-    
-    if (count<5) {
-	  sprintf(filename, "r_%05d.wav",  count++);
-	  fres = f_open(&fil, filename, FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
-
-	  if (fres == FR_OK) {
-		  myprintf("I was able to open %s for writing\r\n",filename);
-	  } else {
-		  myprintf("f_open error (%i)\r\n", fres);
-	  }
-
-//	  HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
-//	  HAL_Delay(1000);
-
-//	  HAL_ADC_Start(&hadc1);
-//	  HAL_ADC_PollForConversion(&hadc1, 1);
-
-	  wav_header header = create_PCM_SC_header_correct(50000);
-	  UINT bw;
-//	  fres = f_write(&fil, (to_byte_array(header)), 44, &bw);
-//	  myprintf("wav_size: %d\r\n", header.wav_size);
-//	  myprintf("data_size: %d\r\n", header.data_bytes);
-//	  myprintf("data: %x\r\n", header.data_bytes);
-//	  myprintf("swapped manual: \r\n%x\r\n", ((header.data_bytes<<24) & 0xff000000) |
-//			  ((header.data_bytes<<8) & 0x00ff0000) |
-//			  ((header.data_bytes>>8) & 0x0000ff00) |
-//			((header.data_bytes>>24) & 0x000000ff) );
-//	  uint32_t swapped = endian_swap_32_ret(header.data_bytes);
-	  myprintf("fmt_chunk_size: %d\r\n", header.fmt_chunk_size);
-	  myprintf("fmt_chunk_size: %x\r\n", header.fmt_chunk_size);
-
-
-//	  endian_swap(&swapped, header.data_bytes);
-//	  myprintf("data_size swapped: %d\r\n", swapped);
-//	  myprintf("data_size swapped hex: %x\r\n", swapped);
-	  header_to_sd(&header, &fil, &bw);
-	  
-//	  char h[37];
-//	  sprintf(h, ((char*) &header), sizeof(header));
-//	  h[37] = 0x00;
-//	  myprintf("Header, size: %d, cont: %s\r\n", h);
-
-	  uint32_t start = HAL_GetTick();
-	  myprintf("Clock at start: %d \r\n", start);
-	  for (int i=0; i<50000; i++) { // Used to be i+=2. Changed it to i+=1. Also increased size from 5 to 25000, changed buffer to 32 bit
-//		endian_swap(&(readBuf[i]), HAL_ADC_GetValue(&hadc1));
-		HAL_ADC_Start(&hadc1);
-		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-#if FILTER
-		readBuf_16b[i] = filter(filt, (HAL_ADC_GetValue(&hadc1) & 0x0000ffff));
-#else
-		readBuf_16b[i] = (HAL_ADC_GetValue(&hadc1) & 0x0000ffff);
-#endif
-//		for (int i = 1; i < 22; i++) {
-//			HAL_ADC_GetValue(&hadc1);
-//		}
-	  }
-	  uint32_t end = HAL_GetTick();
-
-	  myprintf("Clock at end: %d\r\n", end);
-	  myprintf("Record time: %d ms\r\n", (end - start));
-
-	  myprintf("First value: %x", readBuf_16b[0]);
-
-	  fres = f_write(&fil,&readBuf_16b, 50000 * 2, &bytesWrote);
-	  count++;
-
-	  if(fres == FR_OK) {
-			myprintf("written to file\r\n");
-	  } else {
-			myprintf("f_write error (%i)\r\n");
-	  }
-
-	  f_close(&fil);
-	  }
+//	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+//
+//    if (count<5) {
+//	  sprintf(filename, "r_%05d.wav",  count++);
+//	  fres = f_open(&fil, filename, FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+//
+//	  if (fres == FR_OK) {
+//		  myprintf("I was able to open %s for writing\r\n",filename);
+//	  } else {
+//		  myprintf("f_open error (%i)\r\n", fres);
+//	  }
+//
+////	  HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+////	  HAL_Delay(1000);
+//
+////	  HAL_ADC_Start(&hadc1);
+////	  HAL_ADC_PollForConversion(&hadc1, 1);
+//
+//	  wav_header header = create_PCM_SC_header_correct(50000);
+//	  UINT bw;
+////	  fres = f_write(&fil, (to_byte_array(header)), 44, &bw);
+////	  myprintf("wav_size: %d\r\n", header.wav_size);
+////	  myprintf("data_size: %d\r\n", header.data_bytes);
+////	  myprintf("data: %x\r\n", header.data_bytes);
+////	  myprintf("swapped manual: \r\n%x\r\n", ((header.data_bytes<<24) & 0xff000000) |
+////			  ((header.data_bytes<<8) & 0x00ff0000) |
+////			  ((header.data_bytes>>8) & 0x0000ff00) |
+////			((header.data_bytes>>24) & 0x000000ff) );
+////	  uint32_t swapped = endian_swap_32_ret(header.data_bytes);
+//	  myprintf("fmt_chunk_size: %d\r\n", header.fmt_chunk_size);
+//	  myprintf("fmt_chunk_size: %x\r\n", header.fmt_chunk_size);
+//
+//
+////	  endian_swap(&swapped, header.data_bytes);
+////	  myprintf("data_size swapped: %d\r\n", swapped);
+////	  myprintf("data_size swapped hex: %x\r\n", swapped);
+//	  header_to_sd(&header, &fil, &bw);
+//
+////	  char h[37];
+////	  sprintf(h, ((char*) &header), sizeof(header));
+////	  h[37] = 0x00;
+////	  myprintf("Header, size: %d, cont: %s\r\n", h);
+//
+//	  uint32_t start = HAL_GetTick();
+//	  myprintf("Clock at start: %d \r\n", start);
+//	  for (int i=0; i<50000; i++) { // Used to be i+=2. Changed it to i+=1. Also increased size from 5 to 25000, changed buffer to 32 bit
+////		endian_swap(&(readBuf[i]), HAL_ADC_GetValue(&hadc1));
+//		HAL_ADC_Start(&hadc1);
+//		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//#if FILTER
+//		readBuf_16b[i] = filter(filt, (HAL_ADC_GetValue(&hadc1) & 0x0000ffff));
+//#else
+//		readBuf_16b[i] = (HAL_ADC_GetValue(&hadc1) & 0x0000ffff);
+//#endif
+////		for (int i = 1; i < 22; i++) {
+////			HAL_ADC_GetValue(&hadc1);
+////		}
+//	  }
+//	  uint32_t end = HAL_GetTick();
+//
+//	  myprintf("Clock at end: %d\r\n", end);
+//	  myprintf("Record time: %d ms\r\n", (end - start));
+//
+//	  myprintf("First value: %x", readBuf_16b[0]);
+//
+//	  fres = f_write(&fil,&readBuf_16b, 50000 * 2, &bytesWrote);
+//	  count++;
+//
+//	  if(fres == FR_OK) {
+//			myprintf("written to file\r\n");
+//	  } else {
+//			myprintf("f_write error (%i)\r\n");
+//	  }
+//
+//	  f_close(&fil);
+//	  }
   }
   /* USER CODE END 3 */
 }
@@ -324,21 +326,20 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-  RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_0;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.LSIDiv = RCC_LSI_DIV1;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
-  RCC_OscInitStruct.PLL.PLLMBOOST = RCC_PLLMBOOST_DIV4;
-  RCC_OscInitStruct.PLL.PLLM = 3;
-  RCC_OscInitStruct.PLL.PLLN = 5;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLMBOOST = RCC_PLLMBOOST_DIV1;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 30;
   RCC_OscInitStruct.PLL.PLLP = 1;
   RCC_OscInitStruct.PLL.PLLQ = 2;
-  RCC_OscInitStruct.PLL.PLLR = 2;
-  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLLVCIRANGE_1;
+  RCC_OscInitStruct.PLL.PLLR = 4;
+  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLLVCIRANGE_0;
   RCC_OscInitStruct.PLL.PLLFRACN = 24576;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -350,7 +351,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
                               |RCC_CLOCKTYPE_PCLK3;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
@@ -492,7 +493,7 @@ static void MX_UART4_Init(void)
 
   /* USER CODE END UART4_Init 1 */
   huart4.Instance = UART4;
-  huart4.Init.BaudRate = 115200;
+  huart4.Init.BaudRate = 9600;
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;
@@ -531,13 +532,37 @@ static void MX_UART4_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SD_FET_EN_GPIO_Port, SD_FET_EN_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOG, MCU_LED2_Pin|MCU_LED1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : SD_FET_EN_Pin */
+  GPIO_InitStruct.Pin = SD_FET_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SD_FET_EN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : MCU_LED2_Pin MCU_LED1_Pin */
+  GPIO_InitStruct.Pin = MCU_LED2_Pin|MCU_LED1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

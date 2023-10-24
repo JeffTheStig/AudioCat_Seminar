@@ -57,6 +57,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SD_FET_EN_Pin GPIO_PIN_3
+#define SD_FET_EN_GPIO_Port GPIOE
+#define MCU_LED2_Pin GPIO_PIN_3
+#define MCU_LED2_GPIO_Port GPIOG
+#define MCU_LED1_Pin GPIO_PIN_4
+#define MCU_LED1_GPIO_Port GPIOG
 
 /* USER CODE BEGIN Private defines */
 #define SD_HANDLE hsd1

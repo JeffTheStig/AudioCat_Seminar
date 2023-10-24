@@ -26,7 +26,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#include "fatfs.h"
+#include "SD/fatfs.h"
 #include "wav_header.h"
 /* USER CODE END Includes */
 
@@ -82,7 +82,7 @@ void myprintf(const char *fmt, ...){
 	va_end(args);
 
 	int len= strlen(buffer);
-	HAL_UART_Transmit(&huart1, (uint8_t*)buffer, len, -1);
+	HAL_UART_Transmit(&huart4, (uint8_t*)buffer, len, -1);
 }
 
 void header_to_sd(wav_header* header, FIL* fil, UINT* bw){
@@ -223,7 +223,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 //	  sprintf(msg, "%hu\r\n", raw);
 //	  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 	  HAL_Delay(1);
@@ -238,8 +238,8 @@ HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 		  myprintf("f_open error (%i)\r\n", fres);
 	  }
 
-	  HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
-	  HAL_Delay(1000);
+//	  HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+//	  HAL_Delay(1000);
 
 //	  HAL_ADC_Start(&hadc1);
 //	  HAL_ADC_PollForConversion(&hadc1, 1);

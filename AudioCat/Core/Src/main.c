@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "app_filex.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -115,11 +116,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
     uint16_t count=0;
-	  uint32_t readBuf[50000];
-	  uint8_t readBuf_8b[50000];
-	  uint16_t readBuf_16b[50000];
-	  char filename[256];
-	  uint16_t raw;
+	uint16_t audioBuf[50000];
+	char filename[256];
+	uint16_t raw;
     char msg[10];
     uint8_t header_size=8;
   /* USER CODE END 1 */
@@ -144,25 +143,35 @@ int main(void)
   MX_GPIO_Init();
   MX_MEMORYMAP_Init();
   MX_ADC1_Init();
-  MX_SDMMC1_SD_Init();
+//  MX_SDMMC1_SD_Init();
   MX_UART4_Init();
+//  MX_FileX_Init();
   /* USER CODE BEGIN 2 */
+//  MX_GPIO_Init();
   //MX_FATFS_Init();
   myprintf("\r\n~ SD card demo ~\r \n\r\n");
   HAL_Delay(1000);
-  HAL_GPIO_WritePin(GPIOG, MCU_LED2_Pin|MCU_LED1_Pin, GPIO_PIN_SET);
+//  HAL_GPIO_WritePin(GPIOG, MCU_LED2_Pin, GPIO_PIN_SET);
+//  HAL_GPIO_WritePin(GPIOG, MCU_LED1_Pin, GPIO_PIN_SET);
+//  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_3, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_4, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
+
+//  GPIOG->CRH &= ~(GPIO_CRH_MODE3 | GPIO_CRH_CNF3);
+//  GPIOG->CRH |= GPIO_CRH_MODE3;
+
 
 //  FATFS FatFs;
 //  FIL fil;
 //  FRESULT fres;
 //
-//  //fres= f_mount(&FatFs, "/", 1);
+//  //fres = f_mount(&FatFs, "/", 1);
 //  if(fres!= FR_OK)
 //  {
 //	  myprintf("f_mount error (%i) \r\n", fres);
 //	  while(1);
 //  }
-//
+
 //  DWORD free_clusters, free_sectors, total_sectors;
 //
 //  FATFS* getFreeFs;
@@ -180,40 +189,7 @@ int main(void)
 //
 //  bw_filter filt = create_filter(1000, 27027);
 //
-//  // fres = f_open(&fil, "/write.txt", FA_READ);
-//    //   if (fres != FR_OK) {
-//  	// 	myprintf("f_open error (%i)\r\n");
-//  	// 	while(1);
-//    //   }
-//  //   myprintf("I was able to open 'test.txt' for reading!\r\n");
-//    //   BYTE readBuf[30];
-//
-//    //   TCHAR* rres = f_gets((TCHAR*)readBuf, 30, &fil);
-//      //     if(rres != 0) {
-//    	//   	myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
-//      //     } else {
-//    	//   	myprintf("f_gets error (%i)\r\n", fres);
-//      //     }
-//  //     f_close(&fil);
-//
-//	  //   fres = f_open(&fil, "write.txt", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
-//	// if(fres == FR_OK) {
-//	// myprintf("I was able to open 'write.txt' for writing\r\n");
-//	// } else {
-//	// myprintf("f_open error (%i)\r\n", fres);
-//	// }
-//	// strncpy((char*)readBuf, "a new file is made!", 19);
-//	  UINT bytesWrote;
-//	  //   fres = f_write(&fil, readBuf, 19, &bytesWrote);
-//	  //   if(fres == FR_OK) {
-//		// 	myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
-//	  //   } else {
-//		// 	myprintf("f_write error (%i)\r\n");
-//	  //   }
-//
-//	  //   f_close(&fil);
-//
-//	  //   f_mount(NULL, "", 0);
+//  UINT bytesWrote;
 
   /* USER CODE END 2 */
 
@@ -229,7 +205,7 @@ int main(void)
 //	  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 	  HAL_Delay(1);
 //	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-//
+
 //    if (count<5) {
 //	  sprintf(filename, "r_%05d.wav",  count++);
 //	  fres = f_open(&fil, filename, FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
@@ -239,63 +215,50 @@ int main(void)
 //	  } else {
 //		  myprintf("f_open error (%i)\r\n", fres);
 //	  }
-//
-////	  HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
-////	  HAL_Delay(1000);
-//
-////	  HAL_ADC_Start(&hadc1);
-////	  HAL_ADC_PollForConversion(&hadc1, 1);
-//
+
+//	  HAL_ADC_Start(&hadc1);
+//	  HAL_ADC_PollForConversion(&hadc1, 1);
+
 //	  wav_header header = create_PCM_SC_header_correct(50000);
 //	  UINT bw;
-////	  fres = f_write(&fil, (to_byte_array(header)), 44, &bw);
-////	  myprintf("wav_size: %d\r\n", header.wav_size);
-////	  myprintf("data_size: %d\r\n", header.data_bytes);
-////	  myprintf("data: %x\r\n", header.data_bytes);
-////	  myprintf("swapped manual: \r\n%x\r\n", ((header.data_bytes<<24) & 0xff000000) |
-////			  ((header.data_bytes<<8) & 0x00ff0000) |
-////			  ((header.data_bytes>>8) & 0x0000ff00) |
-////			((header.data_bytes>>24) & 0x000000ff) );
-////	  uint32_t swapped = endian_swap_32_ret(header.data_bytes);
 //	  myprintf("fmt_chunk_size: %d\r\n", header.fmt_chunk_size);
 //	  myprintf("fmt_chunk_size: %x\r\n", header.fmt_chunk_size);
 //
-//
-////	  endian_swap(&swapped, header.data_bytes);
-////	  myprintf("data_size swapped: %d\r\n", swapped);
-////	  myprintf("data_size swapped hex: %x\r\n", swapped);
 //	  header_to_sd(&header, &fil, &bw);
-//
-////	  char h[37];
-////	  sprintf(h, ((char*) &header), sizeof(header));
-////	  h[37] = 0x00;
-////	  myprintf("Header, size: %d, cont: %s\r\n", h);
-//
-//	  uint32_t start = HAL_GetTick();
-//	  myprintf("Clock at start: %d \r\n", start);
-//	  for (int i=0; i<50000; i++) { // Used to be i+=2. Changed it to i+=1. Also increased size from 5 to 25000, changed buffer to 32 bit
-////		endian_swap(&(readBuf[i]), HAL_ADC_GetValue(&hadc1));
-//		HAL_ADC_Start(&hadc1);
-//		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+
+	  uint32_t start = HAL_GetTick();
+	  myprintf("Clock at start: %d \r\n", start);
+	  for (int i=0; i<50000; i++) { // Used to be i+=2. Changed it to i+=1. Also increased size from 5 to 25000, changed buffer to 32 bit
+		for (int z=1; z<10; z++) {
+			HAL_ADC_Start(&hadc1);
+					HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+		}
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//		HAL_Delay(1);
 //#if FILTER
-//		readBuf_16b[i] = filter(filt, (HAL_ADC_GetValue(&hadc1) & 0x0000ffff));
+//		audioBuf[i] = filter(filt, (HAL_ADC_GetValue(&hadc1) & 0x0000ffff));
 //#else
-//		readBuf_16b[i] = (HAL_ADC_GetValue(&hadc1) & 0x0000ffff);
+		audioBuf[i] = (HAL_ADC_GetValue(&hadc1) & 0x0000ffff);
 //#endif
-////		for (int i = 1; i < 22; i++) {
-////			HAL_ADC_GetValue(&hadc1);
-////		}
+	  }
+
+	  uint32_t end = HAL_GetTick();
+
+	  myprintf("Clock at end: %d\r\n", end);
+	  myprintf("Record time: %d ms\r\n", (end - start));
+
+	  myprintf("First value: %x", audioBuf[0]);
+	  myprintf("Recording:");
+//	  for(int i=0; i < 50000; i++) {
+//		  myprintf("%x", audioBuf[i]);
 //	  }
-//	  uint32_t end = HAL_GetTick();
-//
-//	  myprintf("Clock at end: %d\r\n", end);
-//	  myprintf("Record time: %d ms\r\n", (end - start));
-//
-//	  myprintf("First value: %x", readBuf_16b[0]);
-//
-//	  fres = f_write(&fil,&readBuf_16b, 50000 * 2, &bytesWrote);
-//	  count++;
-//
+	  HAL_UART_Transmit(&huart4, (uint8_t*)audioBuf, 100000, -1);
+
+
+//	  fres = f_write(&fil,&audioBuf, 50000 * 2, &bytesWrote);
+	  count++;
+
 //	  if(fres == FR_OK) {
 //			myprintf("written to file\r\n");
 //	  } else {
@@ -326,20 +289,25 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI
+                              |RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_0;
   RCC_OscInitStruct.LSIDiv = RCC_LSI_DIV1;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLMBOOST = RCC_PLLMBOOST_DIV1;
-  RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 30;
-  RCC_OscInitStruct.PLL.PLLP = 1;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLMBOOST = RCC_PLLMBOOST_DIV4;
+  RCC_OscInitStruct.PLL.PLLM = 3;
+  RCC_OscInitStruct.PLL.PLLN = 5;
+  RCC_OscInitStruct.PLL.PLLP = 64;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   RCC_OscInitStruct.PLL.PLLR = 4;
-  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLLVCIRANGE_0;
+  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLLVCIRANGE_1;
   RCC_OscInitStruct.PLL.PLLFRACN = 24576;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -455,6 +423,8 @@ static void MX_SDMMC1_SD_Init(void)
 {
 
   /* USER CODE BEGIN SDMMC1_Init 0 */
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
+	HAL_Delay(5000);
 
   /* USER CODE END SDMMC1_Init 0 */
 
@@ -464,7 +434,7 @@ static void MX_SDMMC1_SD_Init(void)
   hsd1.Instance = SDMMC1;
   hsd1.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
   hsd1.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
-  hsd1.Init.BusWide = SDMMC_BUS_WIDE_4B;
+  hsd1.Init.BusWide = SDMMC_BUS_WIDE_1B;
   hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
   hsd1.Init.ClockDiv = 0;
   if (HAL_SD_Init(&hsd1) != HAL_OK)
@@ -538,21 +508,21 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SD_FET_EN_GPIO_Port, SD_FET_EN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(SD_FET_EN_GPIO_Port, SD_FET_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, MCU_LED2_Pin|MCU_LED1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : SD_FET_EN_Pin */
   GPIO_InitStruct.Pin = SD_FET_EN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SD_FET_EN_GPIO_Port, &GPIO_InitStruct);
@@ -560,7 +530,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : MCU_LED2_Pin MCU_LED1_Pin */
   GPIO_InitStruct.Pin = MCU_LED2_Pin|MCU_LED1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 

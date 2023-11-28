@@ -24,6 +24,8 @@ add_library(variant_bin STATIC EXCLUDE_FROM_ALL
   variant_generic.cpp
   PeripheralPins_NUCLEO_U5A5ZJ.c
   variant_NUCLEO_U5A5ZJ.cpp
+  PeripheralPins_AudioCatBoard.c
+  variant_AudioCatBoard.cpp
 )
 target_link_libraries(variant_bin PUBLIC variant_usage)
 

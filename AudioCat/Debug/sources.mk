@@ -36,6 +36,4 @@ Core/Src/SD \
 Core/Src \
 Core/Startup \
 Drivers/STM32U5xx_HAL_Driver \
-FileX/App \
-Middlewares/FileX/Core \
 

@@ -1,20 +1,10 @@
 #include <Arduino.h>
-// #include <STM32SD.h>
 #include <SPI.h>
 #include "bme68xLibrary.h"
 
-// Bme68x bme;
 #include <SD.h>
-// #ifndef PIN_CS
-// #define PIN_CS SS
-// #endif
 
 Bme68x bme;
-// Sd2Card card;
-// SdFatFs fatFs;
-// #define SD_DETECT_PIN SD_DETECT_NONE
-// set RX and TX pins
-// HardwareSerial Serial4(PA1, PA0);
 File wavFile;
 int loop_Val=0;
 int begin = 0;
@@ -68,33 +58,13 @@ void writeWavHeader()
 }
 void writeDataToWavFile(uint16_t *data)
 {
-  // if(loop_Val>1000)
-  // {
-  //   wavFile.close();
-  //   while(1);
-  // }
-  // else
-  // {
-  // int16_t sampleValue = map(data, 0, 32767,-32767,32767);
-
-  // subChunk2Size += numChannels * bitsPerSample/8;
   wavFile.seek(40);
   for(int i = 0; i < 100000; i++)
   {
     wavFile.write((uint8_t*)&data[i],2);
   }
-  // wavFile.write((uint8_t*)&data,20000);
   wavFile.close();
-   Serial.println(wavFile.size());
-
-  // wavFile.seek(4);
-  // chunkSize = 36 + subChunk2Size;
-  // wavFile.write((byte*)&chunkSize,4);
-
-  // wavFile.seek(wavFile.size()-1);
-  // wavFile.write((byte*)&sampleValue,2);
-  // Serial.println("Data written to file...");
-  // }
+  Serial.println(wavFile.size());
 }
 
 /**
@@ -102,21 +72,11 @@ void writeDataToWavFile(uint16_t *data)
   * @param None
   * @retval None
   */
-static void MX_ADC1_Init(void)
-{
+static void MX_ADC1_Init(void) {
 
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
 
   ADC_ChannelConfTypeDef sConfig = {0};
 
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-
-  /** Common config
-  */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
   hadc1.Init.Resolution = ADC_RESOLUTION_14B;
@@ -153,21 +113,17 @@ static void MX_ADC1_Init(void)
   {
     while(1);
   }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
 
 }
 
 void setup() {
-  // put your setup code here, to run once:
-  // Serial4.begin(9600);
   Serial.setRx(PA10);
   Serial.setTx(PA9);
   Serial.begin(115200);
    while (!Serial) {
-    ; // wait for serial port to connect. Needed for Leonardo only
+    ; // wait for serial port to connect. Just to be sure.
   }
+  
   //Begin BME68X interfacing
   Wire.begin();
   bme.begin(0x77, Wire);
@@ -189,25 +145,12 @@ void setup() {
  
 
   MX_ADC1_Init();
-  // 	Wire.begin();
-  //   bme.begin(0x77, Wire);
-  //   	if(bme.checkStatus())
-	// {
-	// 	if (bme.checkStatus() == BME68X_ERROR)
-	// 	{
-	// 		Serial.println("Sensor error:" + bme.statusString());
-	// 		return;
-	// 	}
-	// 	else if (bme.checkStatus() == BME68X_WARNING)
-	// 	{
-	// 		Serial.println("Sensor Warning:" + bme.statusString());
-	// 	}
-	// }
-  	// bme.setTPH();
-    // bme.setHeaterProf(300, 100);
-    // Serial.println("TimeStamp(ms), Temperature(deg C), Pressure(Pa), Humidity(%), Gas resistance(ohm), Status");
-  // Serial.println("Hello there!");
-/* Commenting out SD card code to enable BME
+
+  pinMode(PC13, INPUT); // User button
+  pinMode(PC7, OUTPUT); // User LED1
+
+// Commenting out SD card code to enable BME
+// SD card setup
   Serial.println("Initializing SD card...");
   SPI.setMISO(PA6);//MISO
   SPI.setMOSI(PA7);//MOSI
@@ -218,139 +161,51 @@ void setup() {
   }
   Serial.println("card initialized.");
   // Serial.println("Creating example.txt...");
-    wavFile = SD.open(filename, FILE_WRITE);
+  wavFile = SD.open(filename, FILE_WRITE);
 
 
   if (!wavFile)
     while (1);
 
   writeWavHeader();
-  Serial.println("Header created!"); */
-  // myFile.close();
-  //   if (SD.exists("example.txt")) {
-  //   Serial.println("example.txt exists.");
-  // } else {
-  //   Serial.println("example.txt doesn't exist.");
-  // }
-  // Serial.print("Initializing SD card...");
-  // SD.setDx(PC8, PC9, PC10, PC11);
-  // SD.setCMD(PD2);
-  // SD.setCK(PC12); // using PinName
-  // see if the card is present and can be initialized:
-  // while (!SD.begin(SD_DETECT_NONE))
-  // {
-  //   Serial.print("looking for card!");
-  //   delay(100);
-  // }
-  // delay(100);
-  // Serial.println("card initialized.");
+  Serial.println("Header created!"); 
 
-  // // open the file. note that only one file can be open at a time,
-  // // so you have to close this one before opening another.
-  // dataFile = SD.open("datalog.txt", FILE_WRITE);
-  // // if the file is available, seek to last position
-  // if (dataFile) {
-  //   dataFile.seek(dataFile.size());
-  // }
-  // // if the file isn't open, pop up an error:
-  // else {
-  //   Serial.println("error opening datalog.txt");
-  // }
-
-
-  // pinMode(PC7, OUTPUT);
-  // pinMode(PG4, OUTPUT);
-
-  // card.setDx(PC8, SD_DETECT_NONE, SD_DETECT_NONE, SD_DETECT_NONE);
-  // card.setCMD(PD2);
-  // card.setCK(PC12);
-  
-  // while(!card.init()) {
-  //   // Serial4.println("initialization failed. Is a card inserted?");
-  //   delay(10);
-  // }
-
-  // while (!fatFs.init()) {
-  //   Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
-  //   delay(10);
-  // }
   begin = millis();
 }
 
 void loop() {
-  // if (loop_Val >= 10000) {
-  //   Serial.printf("Analog reading took %d ms", millis()-begin);
-  //   while(1);
-  // }
-  // put your main code here, to run repeatedly:
-  // Serial.println("Hello World!");
-  // loop_Val++;
-  // digitalWrite(PC7, HIGH); // sets the digital pin 13 on
-  // digitalWrite(PG4, HIGH);
-  // delay(1000);
-  // char filename[100] = "r_00000.wav";
-  // for(int i = 0; i < 5; i++)
-  // {
-  //   sprintf(filename, "x_%05d.wav",  i);
-  //   Serial.println(filename);
-    // myFile = SD.open(filename, FILE_WRITE);
 
-    // buffer[loop_Val] = (uint8_t) analogRead(PC2);
-    // loop_Val++;
-    /* this is commented out for enabling BME
+  if (digitalRead(PC13) == HIGH) { // If button is pressed
+    digitalWrite(PC7, HIGH);
+
     int start = millis();
-    for (int i=0; i<100000; i++) { // Used to be i+=2. Changed it to i+=1. Also increased size from 5 to 25000, changed buffer to 32 bit
+    for (int i=0; i < 100000; i++) {
       HAL_ADC_Start(&hadc1);
       HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
       buffer[i] = (HAL_ADC_GetValue(&hadc1) & 0x0000ffff);
     }
     Serial.printf("Analog reading (STM) took %d ms", millis()-start);
-    // delay(1000);
-    writeDataToWavFile(&buffer[0]); */
-      // dataString += String(sensor);
-    // if(myFile){
-    //   myFile.println(buffer);
-    //   Serial.println("Written to file...");
-    //   Serial.println(myFile.size());
-    //   myFile.close();
-    // }
     
-  // }
-  // Serial.println(dataString);
-  // dataString += String(sensor);            // waits for a second
-  // Serial4.println(sensor);
-  // bme68xData data;
+    writeDataToWavFile(&buffer[0]);
 
-	// bme.setOpMode(BME68X_FORCED_MODE);
-	// delayMicroseconds(bme.getMeasDur());
+    bme68xData data;
 
-	// if (bme.fetchData())
-	// {
-	// 	bme.getData(data);
-	// 	Serial.print(String(millis()) + ", ");
-	// 	Serial.print(String(data.temperature) + ", ");
-	// 	Serial.print(String(data.pressure) + ", ");
-	// 	Serial.print(String(data.humidity) + ", ");
-	// 	Serial.print(String(data.gas_resistance) + ", ");
-	// 	Serial.println(data.status, HEX);
-	// }
-  // digitalWrite(PC7, LOW);  // sets the digital pin 13 off
-  // digitalWrite(PG4, LOW);
-  // delay(1000);            // waits for a second
-  // delay(1000);
-  bme68xData data;
+    bme.setOpMode(BME68X_FORCED_MODE);
+    delayMicroseconds(bme.getMeasDur());
 
-	bme.setOpMode(BME68X_FORCED_MODE);
-	delayMicroseconds(bme.getMeasDur());
+    if (bme.fetchData()) {
+      bme.getData(data);
+      Serial.print(String(millis()) + ", ");
+      Serial.print(String(data.temperature) + ", ");
+      Serial.print(String(data.pressure) + ", ");
+      Serial.print(String(data.humidity) + ", ");
+      Serial.print(String(data.gas_resistance) + ", ");
+      Serial.println(data.status, HEX);
+    }
 
-	if (bme.fetchData())
-	{
-		bme.getData(data);
-		Serial.print(String(millis()) + ", ");
-		Serial.print(String(data.temperature) + ", ");
-		Serial.print(String(data.pressure) + ", ");
-		Serial.print(String(data.humidity) + ", ");
-		Serial.print(String(data.gas_resistance) + ", ");
-		Serial.println(data.status, HEX);
-	}
+    digitalWrite(PC7, LOW);
+
+  }
+
+  
 }

@@ -65,7 +65,7 @@ wav_header create_PCM_SC_header(uint32_t wav_size, uint32_t sample_rate, uint32_
 }
 
 wav_header create_PCM_SC_header_correct(uint32_t num_samples) {
-    uint32_t sample_rate = 27027;
+    uint32_t sample_rate = 40000;
     uint32_t bytes_per_sample = 2;
     uint16_t bit_depth = 14;
     uint32_t data_bytes = 1 * num_samples * bytes_per_sample; // Number of bytes in data. Number of samples * num_channels * sample byte size
@@ -110,24 +110,24 @@ uint16_t endian_swap_16_ret(uint16_t src) {
 //		((src&0xff00)>>8);
 }
 
-unsigned char* to_byte_array(wav_header header) {
-	unsigned char* out[44];
-	strncpy(out[0], header.riff_header, 4);
-	memcpy( out[4], &header.wav_size, 4 );
-	strncpy(out[8], header.wave_header, 4);
-	strncpy(out[8], header.fmt_header, 4);
-	memcpy( out[16], &header.fmt_chunk_size, 4 );
-	memcpy( out[20], &header.audio_format, 2 );
-	memcpy( out[22], &header.num_channels, 2 );
-	memcpy( out[24], &header.sample_rate, 4 );
-	memcpy( out[28], &header.byte_rate, 4 );
-	memcpy( out[32], &header.sample_alignment, 2 );
-	memcpy( out[34], &header.bit_depth, 2 );
-	strncpy(out[36], header.data_header, 4);
-	memcpy( out[40], &header.data_bytes, 4 );
+// unsigned char* to_byte_array(wav_header header) {
+// 	unsigned char* out[44];
+// 	strncpy(out[0], (unsigned char*) header.riff_header, 4);
+// 	memcpy( out[4], &header.wav_size, 4 );
+// 	strncpy(out[8], (unsigned char*) header.wave_header, 4);
+// 	strncpy(out[8], (unsigned char*) header.fmt_header, 4);
+// 	memcpy( out[16], &header.fmt_chunk_size, 4 );
+// 	memcpy( out[20], &header.audio_format, 2 );
+// 	memcpy( out[22], &header.num_channels, 2 );
+// 	memcpy( out[24], &header.sample_rate, 4 );
+// 	memcpy( out[28], &header.byte_rate, 4 );
+// 	memcpy( out[32], &header.sample_alignment, 2 );
+// 	memcpy( out[34], &header.bit_depth, 2 );
+// 	strncpy(out[36], (unsigned char*) header.data_header, 4);
+// 	memcpy( out[40], &header.data_bytes, 4 );
 
-	return out;
-}
+// 	return out;
+// }
 
 bw_filter create_filter(double cutoff, double sample) {
 	bw_filter f;

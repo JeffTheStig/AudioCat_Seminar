@@ -1,12 +1,19 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <SPI.h>
 #include "bme68xLibrary.h"
 
 #include <SD.h>
+#include "wav_header.h"
+
+#define SAMPLE_SIZE 100000 // Sample size set to 100,000 samples 
 
 Bme68x bme;
 File wavFile;
-int loop_Val=0;
+char wavFilename[32];
+File envFile;
+char envFilename[32];
+int fileCount = 0;
 int begin = 0;
 ADC_HandleTypeDef hadc1;
 
@@ -56,15 +63,35 @@ void writeWavHeader()
    wavFile.write(subChunk2ID,4);
    wavFile.write((byte*)&chunkSize,4);
 }
+
+void headerToSd(wav_header* header) {
+  wavFile.seek(0);
+	Serial.println("start writing header");
+	wavFile.write(header->riff_header, 4);
+	wavFile.write((uint8_t*) &(header->wav_size), 4);
+	wavFile.write(header->wave_header, 4);
+	Serial.println("finished RIFF header");
+	wavFile.write(header->fmt_header, 4);
+	wavFile.write((uint8_t*) &(header->fmt_chunk_size), 4);
+	wavFile.write((uint8_t*) &(header->audio_format), 2);
+	wavFile.write((uint8_t*) &(header->num_channels), 2);
+	wavFile.write((uint8_t*) &(header->sample_rate), 4);
+	wavFile.write((uint8_t*) &(header->byte_rate), 4);
+	wavFile.write((uint8_t*) &(header->sample_alignment), 2);
+	wavFile.write((uint8_t*) &(header->bit_depth), 2);
+	wavFile.write(header->data_header, 4);
+	wavFile.write((uint8_t*) &(header->data_bytes), 4);
+	Serial.println("Finished writing header");
+}
 void writeDataToWavFile(uint16_t *data)
 {
-  wavFile.seek(40);
-  for(int i = 0; i < 100000; i++)
+  // wavFile.seek(44);
+  for(int i = 0; i < SAMPLE_SIZE; i++)
   {
     wavFile.write((uint8_t*)&data[i],2);
   }
+  Serial.printf("Wav file size: %d\r\n", wavFile.size());
   wavFile.close();
-  Serial.println(wavFile.size());
 }
 
 /**
@@ -120,9 +147,6 @@ void setup() {
   Serial.setRx(PA10);
   Serial.setTx(PA9);
   Serial.begin(115200);
-   while (!Serial) {
-    ; // wait for serial port to connect. Just to be sure.
-  }
   
   //Begin BME68X interfacing
   Wire.begin();
@@ -139,18 +163,20 @@ void setup() {
 			Serial.println("Sensor Warning:" + bme.statusString());
 		}
 	}
-  	bme.setTPH();
-    bme.setHeaterProf(300, 100);
-    Serial.println("TimeStamp(ms), Temperature(deg C), Pressure(Pa), Humidity(%), Gas resistance(ohm), Status");
- 
+  bme.setTPH();
+  bme.setHeaterProf(300, 100);
+  Serial.println("TimeStamp(ms), Temperature(deg C), Pressure(Pa), Humidity(%), Gas resistance(ohm), Status");
+  bme.fetchData();
+  bme68xData data;
+  bme.getData(data);
 
   MX_ADC1_Init();
 
   pinMode(PC13, INPUT); // User button
   pinMode(PC7, OUTPUT); // User LED1
 
-// Commenting out SD card code to enable BME
-// SD card setup
+  // Commenting out SD card code to enable BME
+  // SD card setup
   Serial.println("Initializing SD card...");
   SPI.setMISO(PA6);//MISO
   SPI.setMOSI(PA7);//MOSI
@@ -160,16 +186,18 @@ void setup() {
     return;
   }
   Serial.println("card initialized.");
-  // Serial.println("Creating example.txt...");
-  wavFile = SD.open(filename, FILE_WRITE);
 
+  sprintf(wavFilename, "R_%05d.WAV", fileCount + 1);
+  while(SD.exists(wavFilename)) {
+    sprintf(wavFilename, "R_%05d.WAV", ++fileCount + 1); // Find next file name.
+  }
 
-  if (!wavFile)
-    while (1);
+  Serial.printf("Starting at filecount: %d\r\n", fileCount);
 
-  writeWavHeader();
-  Serial.println("Header created!"); 
+  pinMode(PB7, OUTPUT);
+  digitalWrite(PB7, HIGH); // Turn on blue LED to indicate the setup process is finished.
 
+  Serial.println("Booting complete...starting loop");
   begin = millis();
 }
 
@@ -178,17 +206,32 @@ void loop() {
   if (digitalRead(PC13) == HIGH) { // If button is pressed
     digitalWrite(PC7, HIGH);
 
+    sprintf(wavFilename, "r_%05d.wav", ++fileCount);
+    Serial.printf("Deleting file: %s, Status: %d\r\n", wavFilename, SD.remove(wavFilename));
+    wavFile = SD.open(wavFilename, FILE_WRITE);
+
+    if (!wavFile)
+      while (1);
+
+    // writeWavHeader();
+    wav_header header = create_PCM_SC_header_correct(SAMPLE_SIZE); // Create a new wav header.
+    headerToSd(&header);
+    Serial.println("Header created!"); 
+
     int start = millis();
-    for (int i=0; i < 100000; i++) {
+    for (int i=0; i < SAMPLE_SIZE; i++) { // Read SAMPLE_SIZE ADC samples
       HAL_ADC_Start(&hadc1);
       HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
       buffer[i] = (HAL_ADC_GetValue(&hadc1) & 0x0000ffff);
     }
-    Serial.printf("Analog reading (STM) took %d ms", millis()-start);
+    Serial.printf("Analog reading (STM) took %d ms\r\n", millis()-start);
     
     writeDataToWavFile(&buffer[0]);
 
+    wavFile.close();
+
     bme68xData data;
+    DynamicJsonDocument doc(1024);
 
     bme.setOpMode(BME68X_FORCED_MODE);
     delayMicroseconds(bme.getMeasDur());
@@ -201,7 +244,29 @@ void loop() {
       Serial.print(String(data.humidity) + ", ");
       Serial.print(String(data.gas_resistance) + ", ");
       Serial.println(data.status, HEX);
+
+      doc["time"] = start;
+      doc["temperature"] = data.temperature;
+      doc["pressure"] = data.pressure;
+      doc["humidity"] = data.humidity;
+      doc["gas_resistance"] = data.gas_resistance;
     }
+
+    sprintf(envFilename, "d_%05d.jsn", fileCount);
+    Serial.printf("Deleting file: %s, Status: %d\r\n", envFilename, SD.remove(envFilename));
+    envFile = SD.open(envFilename, FILE_WRITE);
+
+    Serial.printf("Filename: %s\r\n", envFilename);
+
+    String datOut = "";
+    serializeJson(doc, datOut);
+
+    char output[512];
+    datOut.toCharArray(output, 512);
+    Serial.println(output);
+    envFile.write(output, datOut.length());
+    Serial.printf("envFile size: %d\r\n", envFile.size());
+    envFile.close();
 
     digitalWrite(PC7, LOW);
 

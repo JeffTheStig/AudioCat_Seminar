@@ -173,7 +173,8 @@ void setup() {
   MX_ADC1_Init();
 
   pinMode(PC13, INPUT); // User button
-  pinMode(PC7, OUTPUT); // User LED1
+  pinMode(PB7, OUTPUT); // User LED2 (BLUE)
+  pinMode(PG2, OUTPUT); // User LED3 (RED)
 
   // Commenting out SD card code to enable BME
   // SD card setup
@@ -194,8 +195,8 @@ void setup() {
 
   Serial.printf("Starting at filecount: %d\r\n", fileCount);
 
-  pinMode(PB7, OUTPUT);
-  digitalWrite(PB7, HIGH); // Turn on blue LED to indicate the setup process is finished.
+  pinMode(PC7, OUTPUT);
+  digitalWrite(PC7, HIGH); // Turn on blue LED to indicate the setup process is finished.
 
   Serial.println("Booting complete...starting loop");
   begin = millis();
@@ -204,7 +205,7 @@ void setup() {
 void loop() {
 
   if (digitalRead(PC13) == HIGH) { // If button is pressed
-    digitalWrite(PC7, HIGH);
+    digitalWrite(PB7, HIGH);
 
     sprintf(wavFilename, "r_%05d.wav", ++fileCount);
     Serial.printf("Deleting file: %s, Status: %d\r\n", wavFilename, SD.remove(wavFilename));
@@ -237,6 +238,7 @@ void loop() {
     delayMicroseconds(bme.getMeasDur());
 
     if (bme.fetchData()) {
+      digitalWrite(PG2, LOW);
       bme.getData(data);
       Serial.print(String(millis()) + ", ");
       Serial.print(String(data.temperature) + ", ");
@@ -250,6 +252,8 @@ void loop() {
       doc["pressure"] = data.pressure;
       doc["humidity"] = data.humidity;
       doc["gas_resistance"] = data.gas_resistance;
+    } else {
+      digitalWrite(PG2, HIGH);
     }
 
     sprintf(envFilename, "d_%05d.jsn", fileCount);
@@ -268,7 +272,7 @@ void loop() {
     Serial.printf("envFile size: %d\r\n", envFile.size());
     envFile.close();
 
-    digitalWrite(PC7, LOW);
+    digitalWrite(PB7, LOW);
 
   }
 

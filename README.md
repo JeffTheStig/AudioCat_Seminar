@@ -1,5 +1,5 @@
 # AudioCat_Seminar
-This repo provides the code base for the Audiocat project performed as part of the Practical IOT and Seminar from the Master Computer Science at the TU Delft, 2023.
+This repo provides the code base for the Audiocat project performed as part of the Advanced Practical IoT and Seminar from the Master Computer Science at the TU Delft, 2023.
 
 ## Structure
 The repo contains 5 different projects. The different project are outlined here.
@@ -28,3 +28,17 @@ board = NUCLEO_U5A5ZJ ; To target the nucleo board
 ```
 
 If you want to start a new with these variants, copy the project and replace the main.cpp file with a clean main.cpp file (include arduino.h and create two functions setup and loop with no arguments).
+
+### AudiocatDataAnalyzer
+This is a project written in Python used to analyze recordings. The Audiocat (dev)board will produce two separate files per recording: a JSN and a WAV file. The AudiocatDataAnalyzer project can load a folder with these files and show the sensor data in the JSN file and playback the file in the WAV file. It can also run the WAV file through Birdnet and give the user a prediction on the bird(s) that is/are recorded.
+
+To install the dependencies, install the conda environment (https://anaconda.org/) bundled with the project by running the following commands:
+```
+conda env create -f environment.yml
+conda activate audiocat
+```
+
+After this, the program can be started as follows:
+```python main.py```
+
+For more info, refer to the README in the AudiocatDataAnalyzer folder.

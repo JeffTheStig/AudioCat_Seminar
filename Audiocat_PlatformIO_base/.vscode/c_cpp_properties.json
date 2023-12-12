@@ -10,10 +10,10 @@
             "includePath": [
                 "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/include",
                 "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/src",
+                "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/.pio/libdeps/nucleo_u5a5zjxq/SD/src",
                 "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/.pio/libdeps/nucleo_u5a5zjxq/ArduinoJson/src",
                 "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/.pio/libdeps/nucleo_u5a5zjxq/BME680/src",
                 "/Users/jeffrey/.platformio/packages/framework-arduinoststm32/libraries/Wire/src",
-                "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/.pio/libdeps/nucleo_u5a5zjxq/SD/src",
                 "/Users/jeffrey/.platformio/packages/framework-arduinoststm32/libraries/SPI/src",
                 "/Users/jeffrey/.platformio/packages/framework-arduinoststm32/cores/arduino/avr",
                 "/Users/jeffrey/.platformio/packages/framework-arduinoststm32/cores/arduino/stm32",
@@ -55,10 +55,10 @@
                 "path": [
                     "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/include",
                     "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/src",
+                    "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/.pio/libdeps/nucleo_u5a5zjxq/SD/src",
                     "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/.pio/libdeps/nucleo_u5a5zjxq/ArduinoJson/src",
                     "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/.pio/libdeps/nucleo_u5a5zjxq/BME680/src",
                     "/Users/jeffrey/.platformio/packages/framework-arduinoststm32/libraries/Wire/src",
-                    "/Users/jeffrey/Documents/TUDelft/repos/AudioCat_Seminar/Audiocat_PlatformIO_base/.pio/libdeps/nucleo_u5a5zjxq/SD/src",
                     "/Users/jeffrey/.platformio/packages/framework-arduinoststm32/libraries/SPI/src",
                     "/Users/jeffrey/.platformio/packages/framework-arduinoststm32/cores/arduino/avr",
                     "/Users/jeffrey/.platformio/packages/framework-arduinoststm32/cores/arduino/stm32",

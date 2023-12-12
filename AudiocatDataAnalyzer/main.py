@@ -61,7 +61,7 @@ def main_gui():
     analyzer = Analyzer()
 
     # Create the window.
-    window = sg.Window("Audiocat Analysis tool", layout)
+    window = sg.Window("Audiocat Analysis tool", layout, resizable=True, finalize=True)
 
     # Initialize all necessary variables
     # UI event loop. Acts on events (button presses etc...)

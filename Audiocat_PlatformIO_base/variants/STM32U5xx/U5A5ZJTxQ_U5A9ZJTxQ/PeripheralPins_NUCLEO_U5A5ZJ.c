@@ -16,7 +16,7 @@
  * STM32U5A5ZJTxQ.xml, STM32U5A9ZJTxQ.xml
  * CubeMX DB release 6.0.90
  */
-// #if !defined(CUSTOM_PERIPHERAL_PINS)
+#if defined(ARDUINO_NUCLEO_U5A5ZJ)
 #include "Arduino.h"
 #include "PeripheralPins.h"
 
@@ -672,4 +672,4 @@ WEAK const PinMap PinMap_SD_D123DIR[] = {
 };
 #endif
 
-// #endif /* !CUSTOM_PERIPHERAL_PINS */
+#endif /* !CUSTOM_PERIPHERAL_PINS */

@@ -204,7 +204,7 @@ WEAK void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
                               |RCC_CLOCKTYPE_PCLK3;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB3CLKDivider = RCC_HCLK_DIV1;
@@ -213,6 +213,18 @@ WEAK void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
+  // RCC_PeriphCLKInitTypeDef PeriphClkInit = {};
+  // PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADCDAC | RCC_PERIPHCLK_CLK48;
+  // PeriphClkInit.AdcDacClockSelection = RCC_ADCDACCLKSOURCE_HSI;
+  // PeriphClkInit.IclkClockSelection = RCC_CLK48CLKSOURCE_HSI48;
+  // if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
+
+    /* ADC1 clock enable */
+    // __HAL_RCC_ADC12_CLK_ENABLE();
 }
 
 #ifdef __cplusplus

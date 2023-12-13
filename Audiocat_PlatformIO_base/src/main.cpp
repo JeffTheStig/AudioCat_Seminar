@@ -1,4 +1,5 @@
 #include <Arduino.h>
+
 #include <ArduinoJson.h>
 #include <SPI.h>
 #include "bme68xLibrary.h"
@@ -140,6 +141,7 @@ static void MX_ADC1_Init(void) {
   {
     while(1);
   }
+
 
 }
 

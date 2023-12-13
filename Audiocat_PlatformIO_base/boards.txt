@@ -28,13 +28,25 @@ Nucleo_144.upload.maximum_data_size=0
 Nucleo_144.menu.pnum.nucleo_u5a5zj=Nucleo U5A5ZJ
 Nucleo_144.menu.pnum.nucleo_u5a5zj.node=NODE_U5A5ZJ
 Nucleo_144.menu.pnuw.nucleo_u5a5zj.upload.maximum_size=262144
-Nucleo_144.menu.pnuw.nucleo_u5a5zj..upload.maximum_data_size=2097152
+Nucleo_144.menu.pnuw.nucleo_u5a5zj.upload.maximum_data_size=2097152
 Nucleo_144.menu.pnum.nucleo_u5a5zj.build.mcu=cortex-m33
 Nucleo_144.menu.pnum.nucleo_u5a5zj.build.board=NUCLEO_U5A5ZJ
 Nucleo_144.menu.pnum.nucleo_u5a5zj.build.series=STM32U5xx
 Nucleo_144.menu.pnum.nucleo_u5a5zj.build.product_line=STM32U5A5xx
 Nucleo_144.menu.pnum.nucleo_u5a5zj.build.variant=STM32U5A5ZJTxQ
 Nucleo_144.menu.pnum.nucleo_u5a5zj.build.peripheral_pins=-DCUSTOM_PERIPHERAL_PINS
+
+# NUCLEO_U5A5ZJ board
+Nucleo_144.menu.pnum.audiocatboard=AudioCatBoard
+Nucleo_144.menu.pnum.audiocatboard.node=AudioCatBoard
+Nucleo_144.menu.pnuw.audiocatboard.upload.maximum_size=262144
+Nucleo_144.menu.pnuw.audiocatboard.upload.maximum_data_size=2097152
+Nucleo_144.menu.pnum.audiocatboard.build.mcu=cortex-m33
+Nucleo_144.menu.pnum.audiocatboard.build.board=NUCLEO_U5A5ZJ
+Nucleo_144.menu.pnum.audiocatboard.build.series=STM32U5xx
+Nucleo_144.menu.pnum.audiocatboard.build.product_line=STM32U5A9xx
+Nucleo_144.menu.pnum.audiocatboard.build.variant=STM32U5A9ZJTxQ
+Nucleo_144.menu.pnum.audiocatboard.build.peripheral_pins=-DCUSTOM_PERIPHERAL_PINS
 
 # Upload menu
 Nucleo_144.menu.upload_method.MassStorage=Mass Storage

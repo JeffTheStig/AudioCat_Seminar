@@ -1,0 +1,46 @@
+{
+    "build": {
+      "core": "stm32",
+      "cpu": "cortex-m33",
+      "extra_flags": "-DSTM32U5xx -DSTM32U5A5xx",
+      "f_cpu": "160000000L",
+      "framework_extra_flags": {
+        "arduino": "-DCUSTOM_PERIPHERAL_PINS"
+      },
+      "mcu": "STM32U5A5ZJT6Q",
+      "product_line": "STM32U5A5xx",
+      "variant": "STM32U5xx/U5A5ZJTxQ_U5A9ZJTxQ",
+      "variant_dir": "variants"
+    },
+    "connectivity": [
+      "can"
+    ],
+    "debug": {
+      "default_tools": [
+        "stlink"
+      ],
+      "jlink_device": "STM32U5A5ZJ",
+      "onboard_tools": [
+        "stlink"
+      ],
+      "openocd_target": "STM32U5x"
+    },
+    "frameworks": [
+      "arduino"
+    ],
+    "name": "AudioCatBoard",
+    "upload": {
+      "maximum_ram_size": 262144,
+      "maximum_size": 2097152,
+      "protocol": "stlink",
+      "protocols": [
+        "stlink",
+        "jlink",
+        "cmsis-dap",
+        "blackmagic",
+        "mbed"
+      ]
+    },
+    "url": "https://www.st.com/en/evaluation-tools/nucleo-u5a5zj-q.html",
+    "vendor": "ST"
+  }
